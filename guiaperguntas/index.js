@@ -1,17 +1,26 @@
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
 
 app.set("view engine","ejs");
 app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false })); //decodifica dados enviados pelo formullário para js
+app.use(bodyParser.json()); //API
 
 app.get("/",(req,res) =>{
-   res.send("<h1>Página Inicial</h1>")
+   res.render("home")
 
     
 })
 
 app.get("/perguntar",(req,res)=>{
     res.render("index")
+})
+
+app.post("/salvarpergunta",(req,res) =>{
+    var titulo = req.body.titulo;
+    var descricao = req.body.descricao;
+    res.send("Recebido " + titulo + " " + descricao)
 })
 
 app.listen(8080,(erro)=>{
