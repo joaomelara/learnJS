@@ -1,6 +1,18 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const connect = require("./database/database")
+const PerguntaModel = require("./database/Pergunta");
+const Pergunta = require("./database/Pergunta");
+
+connect
+    .authenticate()
+    .then(()=>{
+       console.log("Conectado") 
+    })
+    .catch((msgErro) =>{
+        console.log("Deu erro na conexão aqui ó")
+    })
 
 app.set("view engine","ejs");
 app.use(express.static('public'));
@@ -8,7 +20,11 @@ app.use(bodyParser.urlencoded({ extended: false })); //decodifica dados enviados
 app.use(bodyParser.json()); //API
 
 app.get("/",(req,res) =>{
-   res.render("home")
+    PerguntaModel.findAll({raw:true}).then(pergunta => {
+        res.render("home",{
+            pergunta:pergunta});
+    })
+   
 
     
 })
@@ -20,7 +36,14 @@ app.get("/perguntar",(req,res)=>{
 app.post("/salvarpergunta",(req,res) =>{
     var titulo = req.body.titulo;
     var descricao = req.body.descricao;
-    res.send("Recebido " + titulo + " " + descricao)
+    PerguntaModel.create({
+        titulo: titulo,
+        descricao: descricao
+    }).then(()=>{
+        res.redirect("/")
+    }).catch((msgErro)=>{
+        
+    });
 })
 
 app.listen(8080,(erro)=>{
