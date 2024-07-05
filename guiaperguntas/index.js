@@ -3,7 +3,8 @@ const app = express();
 const bodyParser = require("body-parser");
 const connect = require("./database/database")
 const PerguntaModel = require("./database/Pergunta");
-const Pergunta = require("./database/Pergunta");
+const Resposta = require("./database/Resposta");
+const { where } = require("sequelize");
 
 connect
     .authenticate()
@@ -20,7 +21,9 @@ app.use(bodyParser.urlencoded({ extended: false })); //decodifica dados enviados
 app.use(bodyParser.json()); //API
 
 app.get("/",(req,res) =>{
-    PerguntaModel.findAll({raw:true}).then(pergunta => {
+    PerguntaModel.findAll({raw:true, order:[
+        ['id','DESC']
+    ]}).then(pergunta => {
         res.render("home",{
             pergunta:pergunta});
     })
@@ -45,6 +48,47 @@ app.post("/salvarpergunta",(req,res) =>{
         
     });
 })
+
+app.get("/pergunta/:id",(req, res)=>{
+    var id = req.params.id;
+    PerguntaModel.findOne({
+        where: {id:id}
+    }).then(pergunta => {
+        if(pergunta != undefined){
+
+            Resposta.findAll({
+                where: {perguntaID : pergunta.id},
+                order:[['id','DESC']]
+            }).then(respostas =>{
+                res.render("pergunta",{
+                    pergunta:pergunta,
+                    respostas:respostas
+            })
+
+            
+            })
+        }
+        else{
+            res.redirect("/")
+        }
+    }).catch(()=>{
+        console.log("deu pau aqui ó");
+    })
+})
+
+app.post("/salvarresposta",(req,res) =>{
+    var corpo = req.body.corpo;
+    var perguntaID = req.body.perguntaID;
+    Resposta.create({
+        corpo:corpo,
+        perguntaID:perguntaID,
+    }).then(()=>{
+        res.redirect("/pergunta/"+perguntaID)
+    }).catch((msgErro)=>{
+        
+    });
+})
+
 
 app.listen(8080,(erro)=>{
     if (erro){
